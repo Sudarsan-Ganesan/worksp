@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Marks List</title>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin: 20px auto;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align:center;">Student Marks List</h2>
+
+    <table id="marksTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Marks</th>
+                <th>Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Student rows will be inserted here by JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        function getGrade(mark) {
+            let grade;
+            switch (true) {
+                case (mark >= 90 && mark <= 100):
+                    grade = 'A+';
+                    break;
+                case (mark >= 80 && mark < 90):
+                    grade = 'A';
+                    break;
+                case (mark >= 70 && mark < 80):
+                    grade = 'B';
+                    break;
+                case (mark >= 60 && mark < 70):
+                    grade = 'C';
+                    break;
+                case (mark >= 50 && mark < 60):
+                    grade = 'D';
+                    break;
+                case (mark >= 0 && mark < 50):
+                    grade = 'F';
+                    break;
+                default:
+                    grade = 'Invalid Marks';
+            }
+            return grade;
+        }
+
+        function createMarkList(students) {
+            const tableBody = document.querySelector('#marksTable tbody');
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.marks}</td>
+                    <td>${getGrade(student.marks)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Example data for students
+        const students = [
+            { name: 'Alice', marks: 95 },
+            { name: 'Bob', marks: 82 },
+            { name: 'Charlie', marks: 75 },
+            { name: 'David', marks: 63 },
+            { name: 'Eva', marks: 45 }
+        ];
+
+        // Generate the mark list in the table
+        createMarkList(students);
+    </script>
+
+</body>
+</html>
