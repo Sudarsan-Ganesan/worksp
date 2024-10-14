@@ -1,4 +1,4 @@
-const r = 2;
+const r = 7;
 
 // Function to validate the r (radius)
 function validateRadius(r) {
@@ -7,7 +7,7 @@ function validateRadius(r) {
     console.log("Invalid input: Radius should be a number.");
     return false;
   }
-
+console.log(r);
   // Check if the r (radius) is positive
   if (r <= 0) {
     console.log("Invalid input: Radius should be a positive number.");
@@ -24,3 +24,5 @@ if (validateRadius(r)) {
 } else {
   console.log("Radius validation failed.");
 }
+
+validateRadius(r);
