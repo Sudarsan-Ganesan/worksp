@@ -16,9 +16,10 @@ function printFibonacci(n) {
 
 /* For loop with two variables */  
 function num(numbers) {
-  let num = numbers[0];
-  for (let i = 0; i < num; i++) {
-    for (let j = 0; j < num; j++) {
+  let num1 = numbers[0];
+  let num2 = numbers[0];
+  for (let i = 0; i < num1; i++) {
+    for (let j = 0; j < num2; j++) {
       let z = i+j;
       console.log(z);
     }
