@@ -3,51 +3,72 @@
 namespace Drupal\fetchpages\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\node\Entity\Node;
 use Drupal\Core\Url;
 use Drupal\Core\Link;
+use Drupal\node\Entity\Node;
 
+/**
+ * Controller for displaying rendered nodes from selected content types.
+ */
 class ViewNodesController extends ControllerBase {
 
-  public function view() {
+  /**
+   * Renders nodes from selected content types using the selected view mode.
+   *
+   * @param string $view_mode
+   *   The view mode to use ('full' or 'teaser').
+   *
+   * @return array
+   *   A render array.
+   */
+  public function view($view_mode = 'full') {
     $config = $this->config('fetchpages.settings');
-    $content_types = array_filter($config->get('content_types') ?? []);
+    $content_types = $config->get('content_types') ?? [];
 
-    if (empty($content_types)) {
-      return [
-        '#markup' => $this->t('No content types selected.'),
-      ];
-    }
-
-    $header = [
-      $this->t('Title'),
-      $this->t('Type'),
-      $this->t('Published'),
-      $this->t('Operations'),
+    $build = [
+      '#title' => $this->t('View Nodes in @mode mode', ['@mode' => ucfirst($view_mode)]),
     ];
 
-    $rows = [];
-    $nids = \Drupal::entityQuery('node')
-      ->condition('type', $content_types, 'IN')
-      ->accessCheck(TRUE)
-      ->execute();
+    // Add local tabs.
+    $tabs = [
+      'full' => [
+        'title' => $this->t('Full View'),
+        'url' => Url::fromRoute('fetchpages.view_nodes', ['view_mode' => 'full']),
+      ],
+      'teaser' => [
+        'title' => $this->t('Teaser View'),
+        'url' => Url::fromRoute('fetchpages.view_nodes', ['view_mode' => 'teaser']),
+      ],
+    ];
 
-    $nodes = Node::loadMultiple($nids);
+    $build['tabs'] = [
+      '#theme' => 'links',
+      '#links' => $tabs,
+      '#attributes' => ['class' => ['tabs', 'secondary']],
+    ];
 
-    foreach ($nodes as $node) {
-      $rows[] = [
-        $node->toLink()->toString(),
-        $node->bundle(),
-        $node->isPublished() ? $this->t('Yes') : $this->t('No'),
-        Link::fromTextAndUrl('Edit', Url::fromRoute('entity.node.edit_form', ['node' => $node->id()]))->toString(),
-      ];
+    // Load and render nodes from selected content types.
+    foreach ($content_types as $type) {
+      if (!$type) {
+        continue;
+      }
+
+      $nids = \Drupal::entityQuery('node')
+        ->accessCheck(TRUE)
+        ->condition('type', $type)
+        ->condition('status', 1)
+        ->execute();
+
+      $nodes = Node::loadMultiple($nids);
+
+      foreach ($nodes as $node) {
+        $build[] = \Drupal::entityTypeManager()
+          ->getViewBuilder('node')
+          ->view($node, $view_mode);
+      }
     }
 
-    return [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#empty' => $this->t('No nodes found for the selected content types.'),
-    ];
+    return $build;
   }
+
 }
