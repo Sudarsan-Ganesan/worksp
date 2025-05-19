@@ -1,0 +1,7 @@
+name: 'Fetch Pages'
+type: module
+description: 'Updates nodes from selected content types via API'
+core_version_requirement: ^10
+package: Custom
+dependencies:
+  - node

@@ -1,0 +1,4 @@
+services:
+  fetchpages.content_update:
+    class: Drupal\fetchpages\Service\ContentUpdateService
+    arguments: ['@http_client', '@entity_type.manager']

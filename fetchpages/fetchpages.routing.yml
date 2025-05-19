@@ -1,0 +1,23 @@
+fetchpages.content_type_form:
+  path: '/admin/config/fetchpages/content-update'
+  defaults:
+    _form: '\Drupal\fetchpages\Form\FetchpagesForm'
+    _title: 'Update Nodes via API'
+  requirements:
+    _permission: 'administer site configuration'
+
+fetchpages.update_content_api:
+  path: '/custom-api/update-content'
+  defaults:
+    _controller: '\Drupal\fetchpages\Controller\UpdateContentApiController::handle'
+    _format: 'json'
+  requirements:
+    _permission: 'access content'
+
+fetchpages.view_nodes:
+  path: '/fetchpages/view-nodes'
+  defaults:
+    _controller: '\Drupal\fetchpages\Controller\ViewNodesController::view'
+    _title: 'View Selected Nodes'
+  requirements:
+    _permission: 'access content'    
