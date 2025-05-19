@@ -1,0 +1,15 @@
+fetchpages.view_nodes_full:
+  title: 'Full View'
+  route_name: fetchpages.view_nodes
+  route_parameters:
+    view_mode: 'full'
+  base_route: fetchpages.view_nodes
+  weight: 0
+
+fetchpages.view_nodes_teaser:
+  title: 'Teaser View'
+  route_name: fetchpages.view_nodes
+  route_parameters:
+    view_mode: 'teaser'
+  base_route: fetchpages.view_nodes
+  weight: 1
