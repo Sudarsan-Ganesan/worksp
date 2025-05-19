@@ -151,6 +151,14 @@ class FetchpagesForm extends ConfigFormBase {
         '#url' => \Drupal\Core\Url::fromRoute('fetchpages.view_nodes'),
         '#attributes' => ['class' => ['button', 'button--primary']],
       ];
+
+      $form['reset'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Reset selections'),
+        '#submit' => ['::resetForm'],
+        '#limit_validation_errors' => [], // So it doesn't validate required fields on reset
+      ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -196,6 +204,28 @@ class FetchpagesForm extends ConfigFormBase {
     }
 
     parent::submitForm($form, $form_state);
+  }
+
+  public function resetForm(array &$form, FormStateInterface $form_state) {
+    // Clear the saved config values for your content types and fields.
+    $this->config('fetchpages.settings')
+      ->clear('content_types')
+      ->save();
+
+    // Clear any stored form state values.
+    $form_state->setValue('content_types', []);
+    
+    // Clear fields selections for all content types.
+    $content_types = NodeType::loadMultiple();
+    foreach ($content_types as $type) {
+      $form_state->setValue("fields_{$type->id()}", []);
+    }
+
+    // Clear API results stored in form state if any.
+    $form_state->set('api_results', NULL);
+
+    // Rebuild the form to show empty selections.
+    $form_state->setRebuild(TRUE);
   }
 
 }
