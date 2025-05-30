@@ -8,6 +8,8 @@ use Drupal\node\Entity\NodeType;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\fetchpages\Service\ContentUpdateService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\views\Entity\View;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 
 class FetchpagesForm extends ConfigFormBase {
 
@@ -203,6 +205,114 @@ class FetchpagesForm extends ConfigFormBase {
       $this->messenger()->addError($this->t('Failed to fetch from API: @msg', ['@msg' => $e->getMessage()]));
     }
 
+      // Views dynamically after the config form is saved
+    $field_manager = \Drupal::service('entity_field.manager');
+
+    foreach ($selected_content_types as $ct) {
+      $view_id = 'fetchpages_' . $ct . '_view';
+      $view_exists = View::load($view_id);
+
+      if (!$view_exists) {
+        $view = View::create([
+          'id' => $view_id,
+          'label' => 'FetchPages - ' . ucfirst($ct) . ' View',
+          'description' => 'Auto-generated view for ' . $ct . ' content type.',
+          'base_table' => 'node_field_data',
+          'core' => '10.x',
+        ]);
+
+        $view->addDisplay('default', 'Defaults', 'default');
+        $view->addDisplay('page', 'Page', 'page_1');
+
+        $displays = $view->get('display');
+
+        // Add path and filters to page display
+        $displays['page_1']['display_options']['path'] = 'fetchpages/' . $ct;
+        $displays['page_1']['display_options']['menu'] = [
+          'type' => 'normal',
+          'title' => ucfirst($ct) . ' List',
+          'description' => '',
+          'weight' => 0,
+          'name' => 'main',
+          'context' => 0,
+        ];
+        $displays['page_1']['display_options']['filters']['type'] = [
+          'id' => 'type',
+          'table' => 'node_field_data',
+          'field' => 'type',
+          'value' => $ct,
+          'group' => 1,
+          'exposed' => FALSE,
+        ];
+        $displays['page_1']['display_options']['filters']['status'] = [
+          'id' => 'status',
+          'table' => 'node_field_data',
+          'field' => 'status',
+          'value' => '1',
+          'group' => 1,
+          'exposed' => FALSE,
+        ];
+
+        // ✅ Add relationship to uid → users_field_data
+        $displays['default']['display_options']['relationships']['uid'] = [
+          'id' => 'uid',
+          'table' => 'node_field_data',
+          'field' => 'uid',
+          'relationship' => 'none',
+          'plugin_id' => 'standard',
+          'required' => 0,
+        ];
+
+        // ✅ Add fields
+        $fields_config = [];
+
+        $entity_fields = $field_manager->getFieldDefinitions('node', $ct);
+        foreach ($fields_per_type[$ct] as $field_name) {
+          if (isset($entity_fields[$field_name])) {
+            if ($field_name === 'title') {
+              $fields_config['title'] = [
+                'id' => 'title',
+                'table' => 'node_field_data',
+                'field' => 'title',
+                'label' => 'Title',
+                'plugin_id' => 'standard',
+                'entity_type' => 'node',
+                'entity_field' => 'title',
+                'link_to_entity' => TRUE,
+              ];
+            }
+            else {
+              $fields_config[$field_name] = [
+                'id' => $field_name,
+                'table' => "node__{$field_name}",
+                'field' => $field_name,
+                'label' => $entity_fields[$field_name]->getLabel(),
+                'plugin_id' => 'field',
+                'entity_type' => 'node',
+                'entity_field' => $field_name,
+              ];
+            }
+          }
+        }
+
+        // ✅ Optionally, show the author name from the user entity using the relationship
+        $fields_config['uid_name'] = [
+          'id' => 'name',
+          'table' => 'users_field_data',
+          'field' => 'name',
+          'relationship' => 'uid',
+          'label' => 'Author',
+          'plugin_id' => 'standard',
+        ];
+
+        $displays['default']['display_options']['fields'] = $fields_config;
+
+        $view->set('display', $displays);
+        $view->save();
+
+        $this->messenger()->addStatus($this->t('View "@label" has been created.', ['@label' => $view->label()]));
+      }
+    }
     parent::submitForm($form, $form_state);
   }
 
